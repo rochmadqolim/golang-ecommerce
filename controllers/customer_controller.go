@@ -3,9 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/mux"
 	"github.com/rochmadqolim/golang-ecommerce/config"
 	"github.com/rochmadqolim/golang-ecommerce/database"
 	"github.com/rochmadqolim/golang-ecommerce/models"
@@ -16,37 +18,59 @@ import (
 
 func Register(w http.ResponseWriter, r *http.Request) {
 
-	var regisCustomer models.Customer
+	
+	var newCustomer models.Customer
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&regisCustomer); err != nil {
+	if err := decoder.Decode(&newCustomer); err != nil {
 		response := map[string]string{"message": err.Error()}
 		responses.ResponseJSON(w, http.StatusBadRequest, response)
 		return
 	}
 	defer r.Body.Close()
 
+	// Hash the customer's password before saving it
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newCustomer.Password), bcrypt.DefaultCost)
+    if err != nil {
+        response := map[string]string{"message": "Failed to hash password"}
+        responses.ResponseJSON(w, http.StatusInternalServerError, response)
+        return
+    }
+    newCustomer.Password = string(hashedPassword)
+
 	db := database.DatabaseConnection()
 	defer database.CloseConnection(db)
 
-	newCustomer := models.Customer {
-		Fullname: regisCustomer.Fullname,
-		Email: regisCustomer.Email,
-		Password: regisCustomer.Password,
-	}
+	// Begin a transaction to ensure both customer and cart are created together
+	tx := db.Begin()
 
-	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(newCustomer.Password), bcrypt.DefaultCost)
-	newCustomer.Password = string(hashPassword)
-
-	if err := db.Create(&newCustomer).Error; err != nil {
+	// Create the customer
+	if err := tx.Create(&newCustomer).Error; err != nil {
+		tx.Rollback()
 		response := map[string]string{"message": err.Error()}
 		responses.ResponseJSON(w, http.StatusInternalServerError, response)
 		return
 	}
 
-	response := map[string]string{"message": "signup successfully"}
+	// Create the cart associated with the customer
+	newCart := models.Cart{CustomerID: newCustomer.ID}
+	if err := tx.Create(&newCart).Error; err != nil {
+		tx.Rollback()
+		response := map[string]string{"message": err.Error()}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	// Commit the transaction
+	tx.Commit()
+
+	response := map[string]string{"message": "Customer registered successfully"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
+
+
+
+
 
 func Login(w http.ResponseWriter, r *http.Request) {
 
@@ -124,4 +148,32 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	responses.ResponseJSON(w, http.StatusOK, response)
 
 	
+}
+
+// Validate customer
+func GetCustomerByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerIDStr := vars["id"]
+	customerID, err := strconv.ParseUint(customerIDStr, 10, 32)
+	if err != nil {
+		response := map[string]string{"message": "Invalid customer ID"}
+		responses.ResponseJSON(w, http.StatusBadRequest, response)
+		return
+	}
+
+	db := database.DatabaseConnection()
+	defer database.CloseConnection(db)
+
+	var customer models.Customer
+	if err := db.Preload("Cart.CartItems").First(&customer, uint32(customerID)).Error; err != nil {
+		response := map[string]string{"message": "Customer not found"}
+		responses.ResponseJSON(w, http.StatusNotFound, response)
+		return
+	}
+
+	response := map[string]interface{}{
+		"message":  "Customer retrieved successfully",
+		"customer": customer,
+	}
+	responses.ResponseJSON(w, http.StatusOK, response)
 }

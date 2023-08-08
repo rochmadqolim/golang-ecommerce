@@ -9,6 +9,8 @@ import (
 	"github.com/rochmadqolim/golang-ecommerce/models"
 	"github.com/rochmadqolim/golang-ecommerce/responses"
 )
+
+// Create new product
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct models.Product
 

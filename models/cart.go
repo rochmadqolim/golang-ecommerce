@@ -1,17 +1,9 @@
 package models
 
-import (
-	"time"
-)
-
 type Cart struct {
-	ID       uint32 `gorm:"primaryKey;auto_increment" json:"id"`
-	Customers       Customer   `gorm:"foreignkey:CustomerID;constraint:onUpdate:CASCADE,onDelete:CASCADE" json:"user"`
-	CustomerID uint32 `gorm:"not null"`
+	ID          uint32   `gorm:"primary_key:auto_increment" json:"id"`
+	CustomerID  uint32   `gorm:"unique;not null"`
+	Customer    Customer `gorm:"foreignKey:CustomerID"`
 	CartItems   []CartItem
-	Price int `gorm:"not null" json:"price"`
-	UpdatedAt  time.Time
-	
-
-	
+	TotalAmount int `gorm:"not null"`
 }

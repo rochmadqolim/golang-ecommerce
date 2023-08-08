@@ -14,13 +14,14 @@ import (
 func main() {
 
 	db := database.DatabaseConnection()
-	database.CloseConnection(db)
+	defer database.CloseConnection(db)
 
 
 	r := mux.NewRouter()
 	// Router customer
 	r.HandleFunc("/register", controllers.Register).Methods("POST")
 	r.HandleFunc("/login", controllers.Login).Methods("POST")
+	r.HandleFunc("/customers/{id:[0-9]+}", controllers.GetCustomerByID).Methods("GET")
 
 	// Router product
 	r.HandleFunc("/products/sample", controllers.SampleProduct).Methods("POST") // Endpoint to create sample products
@@ -31,6 +32,14 @@ func main() {
 	// Router category
 	r.HandleFunc("/categories", controllers.CreateCategory).Methods("POST")
 	r.HandleFunc("/categories", controllers.GetAllCategories).Methods("GET")
+
+	// Router cart item
+	r.HandleFunc("/addCartItem", controllers.AddCartItem).Methods("POST")
+	r.HandleFunc("/cartitem/{id}", controllers.DeleteCartItemByID).Methods("DELETE")
+
+	//Router cart
+	r.HandleFunc("/carts/{id}", controllers.GetCartByID).Methods("GET")
+
 
 	fmt.Println("listen in port: "+ os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(":"+ os.Getenv("PORT"), r))

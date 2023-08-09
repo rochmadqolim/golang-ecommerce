@@ -28,7 +28,7 @@ func RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Hash the customer's password before saving it
+	// Hash the customer password before saving it
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newCustomer.Password), bcrypt.DefaultCost)
     if err != nil {
         response := map[string]string{"message": "Failed to hash password"}
@@ -69,6 +69,7 @@ func RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 
 // Login customer
 func LoginCustomer(w http.ResponseWriter, r *http.Request) {
+
 	var request struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -108,7 +109,6 @@ func LoginCustomer(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Declaration algoritm
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(config.JWTKey)
 	if err != nil {
@@ -128,7 +128,7 @@ func LoginCustomer(w http.ResponseWriter, r *http.Request) {
 
 	// Create respon with token
 	respone := map[string]interface{}{
-		"status":"login succesfully",
+		"status":"you are login",
 		"id": customer.ID,
 		"fullname": customer.Fullname,
 		"email": customer.Email,
@@ -139,6 +139,7 @@ func LoginCustomer(w http.ResponseWriter, r *http.Request) {
 
 // Deleta customer
 func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	customerIDStr := vars["id"]
 	customerID, _ := strconv.Atoi(customerIDStr)
@@ -153,7 +154,7 @@ func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hapus Cart dan CartItem terkait dengan Customer
+	// Delete the Cart and CartItem associated with the Customer
 	var cart models.Cart
 	if err := db.Where("customer_id = ?", customer.ID).First(&cart).Error; err != nil {
 		response := map[string]string{"message": "Failed to retrieve cart"}
@@ -173,7 +174,7 @@ func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hapus Customer
+	// Delete customer
 	if err := db.Delete(&customer).Error; err != nil {
 		response := map[string]string{"message": "Failed to delete customer"}
 		responses.ResponseJSON(w, http.StatusInternalServerError, response)
@@ -186,7 +187,8 @@ func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
 
 // Logout customer
 func LogoutCustomer(w http.ResponseWriter, r *http.Request) {
-	// hapus token yang ada di cookie
+
+	// delete the token that is in the cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Path:     "/",
@@ -195,6 +197,6 @@ func LogoutCustomer(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 
-	response := map[string]string{"message": "logout berhasil"}
+	response := map[string]string{"status": "you are logout"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }

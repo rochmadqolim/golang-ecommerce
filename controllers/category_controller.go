@@ -8,8 +8,9 @@ import (
 	"github.com/rochmadqolim/golang-ecommerce/responses"
 )
 
-// Get categories
+// Get all categories
 func GetAllCategories(w http.ResponseWriter, r *http.Request) {
+
 	db := database.DatabaseConnection()
 	defer database.CloseConnection(db)
 
@@ -26,7 +27,6 @@ func GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"message":   "Categories retrieved successfully",
 		"categories": categoryNames,
 	}
 	responses.ResponseJSON(w, http.StatusOK, response)

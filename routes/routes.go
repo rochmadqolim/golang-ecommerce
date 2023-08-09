@@ -18,15 +18,16 @@ func Run() {
 	defer database.CloseConnection(db)
 
 	r := mux.NewRouter()
-
-	// Middleware
-	protectedRouter := r.PathPrefix("/protected").Subrouter()
-	protectedRouter.Use(middleware.JWTMiddleware)
 	
 	// Customer router
 	r.HandleFunc("/register", controllers.RegisterCustomer).Methods("POST")
 	r.HandleFunc("/login", controllers.LoginCustomer).Methods("POST")
 	r.HandleFunc("/logout", controllers.LogoutCustomer).Methods("GET")
+
+	// Middleware
+	protectedRouter := r.PathPrefix("/protected").Subrouter()
+	protectedRouter.Use(middleware.JWTMiddleware)
+	
 	protectedRouter.HandleFunc("/customers/{id}", controllers.DeleteCustomerByID).Methods("DELETE")
 	
 	// Product router

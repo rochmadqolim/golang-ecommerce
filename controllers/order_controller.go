@@ -13,6 +13,7 @@ import (
 
 // Create order
 func CreateOrder(w http.ResponseWriter, r *http.Request) {
+
 	var newOrder models.Order
 
 	decoder := json.NewDecoder(r.Body)
@@ -38,9 +39,7 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	order := models.Order{
 		Fullname:    newOrder.Fullname,
 		Address:     newOrder.Address,
-		Cart:        cart,
 		CartID:      newOrder.CartID,
-		TotalAmount: cart.TotalAmount,
 	}
 
 	if err := db.Create(&order).Error; err != nil {
@@ -49,14 +48,16 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]string{"message": "Checkout created successfully"}
+	response := map[string]string{"message": "Checkout successfully"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
 
 // Status order
 func GetOrderStatusByID(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	orderIDStr := vars["id"]
+
 	orderID, err := strconv.Atoi(orderIDStr)
 	if err != nil {
 		response := map[string]string{"message": "Invalid order ID"}
@@ -75,8 +76,8 @@ func GetOrderStatusByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"message": "Order retrieved successfully",
 		"order":   order,
 	}
+	
 	responses.ResponseJSON(w, http.StatusOK, response)
 }

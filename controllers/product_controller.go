@@ -25,10 +25,10 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	db := database.DatabaseConnection()
 	defer database.CloseConnection(db)
 
-	// Check if the specified category exists
+	// Check category exists
 	var category models.Category
+
 	if err := db.Where("name = ?", newProduct.CategoryName).First(&category).Error; err != nil {
-		// Category doesn't exist, create a new one
 		newCategory := models.Category{
 			Name: newProduct.CategoryName,
 		}
@@ -55,11 +55,13 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{"message": "Product created successfully"}
+
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
 
 // Get product by category
 func GetProductsByCategory(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	categoryName := vars["category_name"]
 
@@ -74,14 +76,15 @@ func GetProductsByCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"message":  "Products retrieved successfully",
 		"products": products,
 	}
+
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
 
 // Get all products
 func GetAllProducts(w http.ResponseWriter, r *http.Request) {
+
 	db := database.DatabaseConnection()
 	defer database.CloseConnection(db)
 
@@ -93,8 +96,8 @@ func GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"message":  "Products retrieved successfully",
 		"products": products,
 	}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
+

@@ -13,6 +13,8 @@ import (
 )
 
 func DatabaseConnection() *gorm.DB {
+
+	// Load .env file
 	errEnv := godotenv.Load()
 	if errEnv != nil {
 		panic("failed to load env file")
@@ -43,6 +45,7 @@ func DatabaseConnection() *gorm.DB {
 		panic("failed to create connection to database")
 	}
 
+	// Tables migration
 	err = db.AutoMigrate(&models.Cart{}, &models.Category{}, &models.CartItem{}, &models.Customer{}, &models.Order{}, &models.Product{})
 	if err != nil {
 		panic("failed to migrate database")
@@ -57,8 +60,8 @@ func DatabaseConnection() *gorm.DB {
 	return db
 }
 
-
 func CloseConnection(db *gorm.DB) {
+
 	database, err := db.DB()
 	if err != nil {
 		panic("failed to close database connection")

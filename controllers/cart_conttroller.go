@@ -9,7 +9,9 @@ import (
 	"github.com/rochmadqolim/golang-ecommerce/responses"
 )
 
+// Get cart customer by id
 func GetCartCustomerByID(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	cartIDStr := vars["id"]
 
@@ -20,15 +22,17 @@ func GetCartCustomerByID(w http.ResponseWriter, r *http.Request) {
 	if err := db.Preload("CartItems").First(&cart, cartIDStr).Error; err != nil {
 		response := map[string]string{"message": "Cart not found"}
 		responses.ResponseJSON(w, http.StatusNotFound, response)
+
 		return
 	}
 
+	// Calculate the total amount in cart
 	totalAmount := 0
 	for _, cartItem := range cart.CartItems {
 		totalAmount += cartItem.SubTotal
 	}
 
-	// Update total amount pada cart
+	// Update total amount in cart
 	cart.TotalAmount = totalAmount
 	if err := db.Save(&cart).Error; err != nil {
 		response := map[string]string{"message": err.Error()}
@@ -37,7 +41,6 @@ func GetCartCustomerByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"message": "Cart retrieved successfully",
 		"cart":    cart,
 	}
 

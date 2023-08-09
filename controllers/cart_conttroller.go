@@ -43,5 +43,3 @@ func GetCartByID(w http.ResponseWriter, r *http.Request) {
 
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
-
-

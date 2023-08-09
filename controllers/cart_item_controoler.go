@@ -49,10 +49,8 @@ func AddCartItem(w http.ResponseWriter, r *http.Request) {
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
 
-
-
-// Delate cart item
-func DeleteCartItemByID(w http.ResponseWriter, r *http.Request) {
+// Delate cart items
+func DeleteCartItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cartItemIDStr := vars["id"]
 
@@ -66,30 +64,8 @@ func DeleteCartItemByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mendapatkan cart yang sesuai
-	var cart models.Cart
-	if err := db.Preload("CartItems").First(&cart, cartItem.CartID).Error; err != nil {
-		response := map[string]string{"message": "Cart not found"}
-		responses.ResponseJSON(w, http.StatusNotFound, response)
-		return
-	}
-
-	// Menghapus cart item
+	// Hapus cart item dari database
 	if err := db.Delete(&cartItem).Error; err != nil {
-		response := map[string]string{"message": err.Error()}
-		responses.ResponseJSON(w, http.StatusInternalServerError, response)
-		return
-	}
-
-	// Hitung total amount baru berdasarkan cart items yang tersisa
-	totalAmount := 0
-	for _, ci := range cart.CartItems {
-		totalAmount += ci.SubTotal
-	}
-
-	// Update total amount pada cart dan simpan ke dalam database
-	cart.TotalAmount = totalAmount
-	if err := db.Save(&cart).Error; err != nil {
 		response := map[string]string{"message": err.Error()}
 		responses.ResponseJSON(w, http.StatusInternalServerError, response)
 		return
@@ -98,6 +74,3 @@ func DeleteCartItemByID(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{"message": "Cart item deleted successfully"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
-
-
-

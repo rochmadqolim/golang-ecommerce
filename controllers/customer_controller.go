@@ -4,20 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
-	"github.com/rochmadqolim/golang-ecommerce/config"
 	"github.com/rochmadqolim/golang-ecommerce/database"
 	"github.com/rochmadqolim/golang-ecommerce/models"
 	"github.com/rochmadqolim/golang-ecommerce/responses"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
+// Register customer
 func Register(w http.ResponseWriter, r *http.Request) {
-
 	
 	var newCustomer models.Customer
 
@@ -68,19 +64,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	responses.ResponseJSON(w, http.StatusOK, response)
 }
 
-
-
-
-
+// Login customer
 func Login(w http.ResponseWriter, r *http.Request) {
-
-	var loginCredentials struct {
+	var request struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&loginCredentials); err != nil {
+	if err := decoder.Decode(&request); err != nil {
 		response := map[string]string{"message": err.Error()}
 		responses.ResponseJSON(w, http.StatusBadRequest, response)
 		return
@@ -91,89 +83,71 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	defer database.CloseConnection(db)
 
 	var customer models.Customer
-	if err := db.Where("email = ?", loginCredentials.Email).First(&customer).Error; err != nil {
-
-		switch err {
-		case gorm.ErrRecordNotFound:
-			response := map[string]string{"message": "invalid email or password"}
-			responses.ResponseJSON(w, http.StatusUnauthorized, response)
-			return
-		default:
-			response := map[string]string{"message": err.Error()}
-			responses.ResponseJSON(w, http.StatusInternalServerError, response)
-			return
-		}
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(customer.Password), []byte(loginCredentials.Password)); err != nil {
-		response := map[string]string{"message": "invalid email or password"}
-		responses.ResponseJSON(w, http.StatusUnauthorized, response)
-		return
-	}
-	
-
-	// Generate and return JWT token on successful login
-	expTime := time.Now().Add(time.Minute * 15)
-	claims := &config.JWTClaim{
-		Email: customer.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "golang-ecommerce",
-			ExpiresAt: jwt.NewNumericDate(expTime),
-		},
-	}
-
-	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// signed token
-	token, err := tokenAlgo.SignedString(config.JWT_KEY)
-	if err != nil {
-		response := map[string]string{"message": err.Error()}
-		responses.ResponseJSON(w, http.StatusInternalServerError, response)
-		return
-	}
-
-	// set token yang ke cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Path:     "/",
-		Value:    token,
-		HttpOnly: true,
-	})
-
-	response := map[string]interface{}{
-		"id":      customer.ID,
-		"fullname":      customer.Fullname,
-		"email":      customer.Email,
-	}
-	
-	responses.ResponseJSON(w, http.StatusOK, response)
-
-	
-}
-
-// Validate customer
-func GetCustomerByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	customerIDStr := vars["id"]
-	customerID, err := strconv.ParseUint(customerIDStr, 10, 32)
-	if err != nil {
-		response := map[string]string{"message": "Invalid customer ID"}
-		responses.ResponseJSON(w, http.StatusBadRequest, response)
-		return
-	}
-
-	db := database.DatabaseConnection()
-	defer database.CloseConnection(db)
-
-	var customer models.Customer
-	if err := db.Preload("Cart.CartItems").First(&customer, uint32(customerID)).Error; err != nil {
+	if err := db.Where("email = ?", request.Email).First(&customer).Error; err != nil {
 		response := map[string]string{"message": "Customer not found"}
 		responses.ResponseJSON(w, http.StatusNotFound, response)
 		return
 	}
 
-	response := map[string]interface{}{
-		"message":  "Customer retrieved successfully",
-		"customer": customer,
+	if err := bcrypt.CompareHashAndPassword([]byte(customer.Password), []byte(request.Password)); err != nil {
+		response := map[string]string{"message": "Invalid password"}
+		responses.ResponseJSON(w, http.StatusUnauthorized, response)
+		return
 	}
+
+	// Create a response containing customer information
+	response := map[string]interface{}{
+		"id":       customer.ID,
+		"fullname": customer.Fullname,
+		"email":    customer.Email,
+	}
+
+	responses.ResponseJSON(w, http.StatusOK, response)
+}
+
+// Deleta customer
+func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerIDStr := vars["id"]
+	customerID, _ := strconv.Atoi(customerIDStr)
+
+	db := database.DatabaseConnection()
+	defer database.CloseConnection(db)
+
+	var customer models.Customer
+	if err := db.First(&customer, customerID).Error; err != nil {
+		response := map[string]string{"message": "Customer not found"}
+		responses.ResponseJSON(w, http.StatusNotFound, response)
+		return
+	}
+
+	// Hapus Cart dan CartItem terkait dengan Customer
+	var cart models.Cart
+	if err := db.Where("customer_id = ?", customer.ID).First(&cart).Error; err != nil {
+		response := map[string]string{"message": "Failed to retrieve cart"}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	if err := db.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
+		response := map[string]string{"message": "Failed to delete cart items"}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	if err := db.Delete(&cart).Error; err != nil {
+		response := map[string]string{"message": "Failed to delete cart"}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	// Hapus Customer
+	if err := db.Delete(&customer).Error; err != nil {
+		response := map[string]string{"message": "Failed to delete customer"}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	response := map[string]string{"message": "Customer deleted successfully"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }

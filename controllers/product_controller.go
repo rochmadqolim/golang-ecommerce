@@ -59,7 +59,7 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get product by category
-func GetProductsByCategoryName(w http.ResponseWriter, r *http.Request) {
+func GetProductsByCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	categoryName := vars["category_name"]
 

@@ -60,7 +60,7 @@ func AddCartItem(w http.ResponseWriter, r *http.Request) {
 
 
 // Delate cart items
-func DeleteCartItem(w http.ResponseWriter, r *http.Request) {
+func DeleteCartItemByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cartItemIDStr := vars["id"]
 

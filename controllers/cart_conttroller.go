@@ -9,7 +9,7 @@ import (
 	"github.com/rochmadqolim/golang-ecommerce/responses"
 )
 
-func GetCartByID(w http.ResponseWriter, r *http.Request) {
+func GetCartCustomerByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cartIDStr := vars["id"]
 

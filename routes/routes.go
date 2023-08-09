@@ -18,30 +18,30 @@ func Run() {
 
 	r := mux.NewRouter()
 	// Router customer
-	r.HandleFunc("/register", controllers.Register).Methods("POST")
-	r.HandleFunc("/login", controllers.Login).Methods("POST")
-	r.HandleFunc("/customers/{id:[0-9]+}", controllers.DeleteCustomerByID).Methods("DELETE")
+	r.HandleFunc("/register", controllers.RegisterCustomer).Methods("POST")
+	r.HandleFunc("/login", controllers.LoginCustomer).Methods("POST")
+	r.HandleFunc("/customers/{id}", controllers.DeleteCustomerByID).Methods("DELETE")
 
 	// Router product
-	r.HandleFunc("/productcreate", controllers.CreateProduct).Methods("POST")    // Endpoint to create products
-	r.HandleFunc("/products/product", controllers.GetAllProducts).Methods("GET") // Endpoint to gel all product
-	r.HandleFunc("/products/category/{category_name}", controllers.GetProductsByCategoryName).Methods("GET")
-
+	r.HandleFunc("/products", controllers.CreateProduct).Methods("POST")    // Endpoint to create products
+	r.HandleFunc("/products", controllers.GetAllProducts).Methods("GET") // Endpoint to gel all product
+	
 	// Router category
 	r.HandleFunc("/categories", controllers.GetAllCategories).Methods("GET")
+	r.HandleFunc("/categories/{category_name}", controllers.GetProductsByCategory).Methods("GET")
 
 	// Router cart item
-	r.HandleFunc("/addCartItem", controllers.AddCartItem).Methods("POST")
-	r.HandleFunc("/cartitem/{id}", controllers.DeleteCartItem).Methods("DELETE")
+	r.HandleFunc("/item", controllers.AddCartItem).Methods("POST")
+	r.HandleFunc("/item/{id}", controllers.DeleteCartItemByID).Methods("DELETE")
 
 	//Router cart
-	r.HandleFunc("/carts/{id}", controllers.GetCartByID).Methods("GET")
+	r.HandleFunc("/carts/{id}", controllers.GetCartCustomerByID).Methods("GET")
 
 	// Router order
-	r.HandleFunc("/checkout", controllers.CreateCheckout).Methods("POST")
-	r.HandleFunc("/checkout/{id:[0-9]+}", controllers.GetOrderStatus).Methods("GET")
+	r.HandleFunc("/checkout", controllers.CreateOrder).Methods("POST")
+	r.HandleFunc("/checkout/{id}", controllers.GetOrderStatusByID).Methods("GET")
 
-	fmt.Println("listen in port: " + os.Getenv("PORT"))
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), r))
+	fmt.Println("Listen to port: " + os.Getenv("PORT"))
+	log.Fatal(http.ListenAndServe(":" + os.Getenv("PORT"), r))
 
 }

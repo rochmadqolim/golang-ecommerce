@@ -12,7 +12,7 @@ import (
 )
 
 // Create order
-func CreateCheckout(w http.ResponseWriter, r *http.Request) {
+func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var newOrder models.Order
 
 	decoder := json.NewDecoder(r.Body)
@@ -54,7 +54,7 @@ func CreateCheckout(w http.ResponseWriter, r *http.Request) {
 }
 
 // Status order
-func GetOrderStatus(w http.ResponseWriter, r *http.Request) {
+func GetOrderStatusByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orderIDStr := vars["id"]
 	orderID, err := strconv.Atoi(orderIDStr)

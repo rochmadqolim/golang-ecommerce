@@ -13,7 +13,7 @@ import (
 )
 
 // Register customer
-func Register(w http.ResponseWriter, r *http.Request) {
+func RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 	
 	var newCustomer models.Customer
 
@@ -65,7 +65,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login customer
-func Login(w http.ResponseWriter, r *http.Request) {
+func LoginCustomer(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`

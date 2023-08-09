@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
+	"github.com/rochmadqolim/golang-ecommerce/config"
 	"github.com/rochmadqolim/golang-ecommerce/database"
 	"github.com/rochmadqolim/golang-ecommerce/models"
 	"github.com/rochmadqolim/golang-ecommerce/responses"
@@ -95,14 +98,43 @@ func LoginCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a response containing customer information
-	response := map[string]interface{}{
-		"id":       customer.ID,
-		"fullname": customer.Fullname,
-		"email":    customer.Email,
+	//  Create jwt token
+	expTime := time.Now().Add(time.Minute * 15)
+	claims := &config.JWTClaim {
+		Email: customer.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: "golang-ecommerce",
+			ExpiresAt: jwt.NewNumericDate(expTime),
+		},
 	}
 
-	responses.ResponseJSON(w, http.StatusOK, response)
+	// Declaration algoritm
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(config.JWTKey)
+	if err != nil {
+		response := map[string]string{"message":"failed to generate token"}
+		responses.ResponseJSON(w, http.StatusInternalServerError, response)
+		
+		return
+	}
+
+		// Set token as a cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    tokenString,
+			Expires:  expTime,
+			HttpOnly: true,
+		})
+
+	// Create respon with token
+	respone := map[string]interface{}{
+		"status":"login succesfully",
+		"id": customer.ID,
+		"fullname": customer.Fullname,
+		"email": customer.Email,
+	}
+
+	responses.ResponseJSON(w, http.StatusOK, respone)
 }
 
 // Deleta customer
@@ -149,5 +181,20 @@ func DeleteCustomerByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{"message": "Customer deleted successfully"}
+	responses.ResponseJSON(w, http.StatusOK, response)
+}
+
+// Logout customer
+func LogoutCustomer(w http.ResponseWriter, r *http.Request) {
+	// hapus token yang ada di cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    "",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	response := map[string]string{"message": "logout berhasil"}
 	responses.ResponseJSON(w, http.StatusOK, response)
 }

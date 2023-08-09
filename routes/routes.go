@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rochmadqolim/golang-ecommerce/controllers"
 	"github.com/rochmadqolim/golang-ecommerce/database"
+	"github.com/rochmadqolim/golang-ecommerce/middleware"
 )
 
 func Run() {
@@ -17,29 +18,35 @@ func Run() {
 	defer database.CloseConnection(db)
 
 	r := mux.NewRouter()
-	// Router customer
+
+	// Middleware
+	protectedRouter := r.PathPrefix("/protected").Subrouter()
+	protectedRouter.Use(middleware.JWTMiddleware)
+	
+	// Customer router
 	r.HandleFunc("/register", controllers.RegisterCustomer).Methods("POST")
 	r.HandleFunc("/login", controllers.LoginCustomer).Methods("POST")
-	r.HandleFunc("/customers/{id}", controllers.DeleteCustomerByID).Methods("DELETE")
-
-	// Router product
-	r.HandleFunc("/products", controllers.CreateProduct).Methods("POST")    // Endpoint to create products
-	r.HandleFunc("/products", controllers.GetAllProducts).Methods("GET") // Endpoint to gel all product
+	r.HandleFunc("/logout", controllers.LogoutCustomer).Methods("GET")
+	protectedRouter.HandleFunc("/customers/{id}", controllers.DeleteCustomerByID).Methods("DELETE")
 	
-	// Router category
-	r.HandleFunc("/categories", controllers.GetAllCategories).Methods("GET")
-	r.HandleFunc("/categories/{category_name}", controllers.GetProductsByCategory).Methods("GET")
-
-	// Router cart item
-	r.HandleFunc("/item", controllers.AddCartItem).Methods("POST")
-	r.HandleFunc("/item/{id}", controllers.DeleteCartItemByID).Methods("DELETE")
-
-	//Router cart
-	r.HandleFunc("/carts/{id}", controllers.GetCartCustomerByID).Methods("GET")
-
-	// Router order
-	r.HandleFunc("/checkout", controllers.CreateOrder).Methods("POST")
-	r.HandleFunc("/checkout/{id}", controllers.GetOrderStatusByID).Methods("GET")
+	// Product router
+	protectedRouter.HandleFunc("/products", controllers.CreateProduct).Methods("POST")   
+	protectedRouter.HandleFunc("/products", controllers.GetAllProducts).Methods("GET") 
+	
+	// Category router
+	protectedRouter.HandleFunc("/categories", controllers.GetAllCategories).Methods("GET")
+	protectedRouter.HandleFunc("/categories/{category_name}", controllers.GetProductsByCategory).Methods("GET")
+	
+	// Cart router
+	protectedRouter.HandleFunc("/cart/{id}", controllers.GetCartCustomerByID).Methods("GET")
+	
+	// Item router
+	protectedRouter.HandleFunc("/item", controllers.AddCartItem).Methods("POST")
+	protectedRouter.HandleFunc("/item/{id}", controllers.DeleteCartItemByID).Methods("DELETE")
+	
+	// Order Router
+	protectedRouter.HandleFunc("/checkout", controllers.CreateOrder).Methods("POST")
+	protectedRouter.HandleFunc("/checkout/{id}", controllers.GetOrderStatusByID).Methods("GET")
 
 	fmt.Println("Listen to port: " + os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(":" + os.Getenv("PORT"), r))

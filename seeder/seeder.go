@@ -23,6 +23,22 @@ func SeedProducts(db *gorm.DB) error {
 	}
 
 	for _, product := range products {
+		// Check if the corresponding category already exists
+		var category models.Category
+		if err := db.Where("name = ?", product.CategoryName).First(&category).Error; err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return fmt.Errorf("failed to query category: %w", err)
+			}
+			// Category doesn't exist, create a new one
+			newCategory := models.Category{Name: product.CategoryName}
+			if err := db.Create(&newCategory).Error; err != nil {
+				return fmt.Errorf("failed to create category: %w", err)
+			}
+			category = newCategory
+		}
+
+		product.CategoryName = category.Name
+
 		if err := db.Create(&product).Error; err != nil {
 			return fmt.Errorf("failed to seed product: %w", err)
 		}
@@ -30,3 +46,4 @@ func SeedProducts(db *gorm.DB) error {
 
 	return nil
 }
+

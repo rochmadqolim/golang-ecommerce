@@ -1,8 +1,12 @@
 package config
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"os"
 
-var JWT_KEY = []byte("ashdjqy9283409bsdklkg8hda01")
+	"github.com/golang-jwt/jwt/v5"
+)
+
+var jwtKey = []byte(os.Getenv("JWT_KEY"))
 
 type JWTClaim struct {
 	Email string

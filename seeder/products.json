@@ -1,0 +1,62 @@
+[
+  {
+    "category_name": "beauty",
+    "name": "sunscreen",
+    "price": 40000,
+    "stock": 500
+  },
+  {
+    "category_name": "beauty",
+    "name": "facial wash",
+    "price": 20000,
+    "stock": 100
+  },
+  {
+    "category_name": "education",
+    "name": "notebook",
+    "price": 19000,
+    "stock": 100
+  },
+  {
+    "category_name": "fashion",
+    "name": "hoodie",
+    "price": 70000,
+    "stock": 100
+  },
+  {
+    "category_name": "fashion",
+    "name": "jogger",
+    "price": 100000,
+    "stock": 100
+  },
+  {
+    "category_name": "fashion",
+    "name": "T-Shirt",
+    "price": 55000,
+    "stock": 100
+  },
+  {
+    "category_name": "electronic",
+    "name": "headphone",
+    "price": 70000,
+    "stock": 100
+  },
+  {
+    "category_name": "electronic",
+    "name": "keyboard",
+    "price": 700000,
+    "stock": 100
+  },
+  {
+    "category_name": "beauty",
+    "name": "lotion",
+    "price": 20000,
+    "stock": 100
+  },
+  {
+    "category_name": "education",
+    "name": "school bag",
+    "price": 150000,
+    "stock": 300
+  }
+]

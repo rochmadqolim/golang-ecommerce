@@ -34,10 +34,13 @@ func main() {
 	// Router cart item
 	r.HandleFunc("/addCartItem", controllers.AddCartItem).Methods("POST")
 	r.HandleFunc("/cartitem/{id}", controllers.DeleteCartItem).Methods("DELETE")
-
+	
 	//Router cart
 	r.HandleFunc("/carts/{id}", controllers.GetCartByID).Methods("GET")
-
+	
+	// Router order
+	r.HandleFunc("/checkout", controllers.CreateCheckout).Methods("POST")
+	r.HandleFunc("/checkout/{id:[0-9]+}", controllers.GetOrderStatus).Methods("GET")
 
 	fmt.Println("listen in port: "+ os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(":"+ os.Getenv("PORT"), r))

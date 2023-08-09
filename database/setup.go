@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rochmadqolim/golang-ecommerce/models"
+	"github.com/rochmadqolim/golang-ecommerce/seeder"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -30,9 +31,16 @@ func DatabaseConnection() *gorm.DB {
 		panic("failed to create connection to database")
 	}
 
-		db.AutoMigrate(&models.Cart{}, &models.Category{},&models.CartItem{}, &models.Customer{}, &models.Order{}, &models.Product{})
+	db.AutoMigrate(&models.Cart{}, &models.Category{},&models.CartItem{}, &models.Customer{}, &models.Order{}, &models.Product{})
 
+	// Seed products
+	err = seeder.SeedProducts(db)
+	if err != nil {
+		fmt.Println("Seeder failed:", err)
+	}
+	
 	return db
+	
 }
 
 func CloseConnection(db *gorm.DB) {
